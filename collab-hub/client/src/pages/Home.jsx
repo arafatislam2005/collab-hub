@@ -48,7 +48,7 @@ const Home = () => {
           </h1>
           <p className="text-xl text-gray-400 mb-6">The ultimate marketplace for 3D designs and models</p>
           {user ? (
-            <p className="text-lg text-green-400 mb-4">✓ Firebase Authentication Active</p>
+            <p className="text-lg text-green-400 mb-4">✓ Authenticated User</p>
           ) : null}
           <Link
             to="/upload"
@@ -108,11 +108,10 @@ const Home = () => {
                     {Array.from({ length: pagination.pages }).map((_, i) => (
                       <button
                         key={i + 1}
-                        className={`px-3 py-1 rounded ${
-                          pagination.page === i + 1
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
+                        className={`px-3 py-1 rounded ${pagination.page === i + 1
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
                       >
                         {i + 1}
                       </button>

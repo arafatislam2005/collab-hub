@@ -25,14 +25,19 @@ export const useDesigns = (filters = {}) => {
           // If backend fails, use sample data
           console.log('Using sample data:', apiErr.message);
           let filtered = [...sampleDesigns];
-          
+
           // Apply filters
-          if (filters.category && filters.category !== 'All') {
-            filtered = filtered.filter(d => d.category === filters.category);
+          if (filters.category && Array.isArray(filters.category) && filters.category.length > 0) {
+            filtered = filtered.filter(d => filters.category.includes(d.category));
+          }
+
+          // Material filter (allow multiple)
+          if (filters.material && Array.isArray(filters.material) && filters.material.length > 0) {
+            filtered = filtered.filter(d => filters.material.includes(d.material || ''));
           }
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(d => 
+            filtered = filtered.filter(d =>
               d.title.toLowerCase().includes(searchLower) ||
               d.description.toLowerCase().includes(searchLower)
             );
@@ -43,7 +48,7 @@ export const useDesigns = (filters = {}) => {
           if (filters.priceMax) {
             filtered = filtered.filter(d => d.price <= parseFloat(filters.priceMax));
           }
-          
+
           setDesigns(filtered);
           setPagination({
             page: 1,
@@ -103,18 +108,30 @@ export const useDesignById = (id) => {
 
 export const useFilters = () => {
   const [filters, setFilters] = useState({
-    category: '',
-    material: '',
+    category: [],
+    material: [],
     priceMin: '',
     priceMax: '',
     search: ''
   });
 
   const updateFilter = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value
-    }));
+    setFilters((prev) => {
+      // toggle for array filters (category, material)
+      if ((key === 'category' || key === 'material') && Array.isArray(prev[key])) {
+        const exists = prev[key].includes(value);
+        return {
+          ...prev,
+          [key]: exists ? prev[key].filter((v) => v !== value) : [...prev[key], value]
+        };
+      }
+
+      // setting priceMin/priceMax or search
+      return {
+        ...prev,
+        [key]: value
+      };
+    });
   };
 
   const resetFilters = () => {

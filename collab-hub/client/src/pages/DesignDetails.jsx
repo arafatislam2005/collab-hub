@@ -69,9 +69,8 @@ const DesignDetails = () => {
                   key={idx}
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setMainImage(img)}
-                  className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition ${
-                    mainImage === img ? 'border-blue-500' : 'border-gray-700 hover:border-gray-500'
-                  }`}
+                  className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition ${mainImage === img ? 'border-blue-500' : 'border-gray-700 hover:border-gray-500'
+                    }`}
                 >
                   <img
                     src={img}
@@ -177,11 +176,10 @@ const DesignDetails = () => {
                 </button>
                 <button
                   onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={`w-full py-3 rounded-lg font-bold transition flex items-center justify-center ${
-                    isWishlisted
+                  className={`w-full py-3 rounded-lg font-bold transition flex items-center justify-center ${isWishlisted
                       ? 'bg-red-600 text-white'
                       : 'bg-blue-500 bg-opacity-50 text-white hover:bg-opacity-70'
-                  }`}
+                    }`}
                 >
                   <FiHeart fill={isWishlisted ? 'currentColor' : 'none'} className="mr-2" />
                   {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}

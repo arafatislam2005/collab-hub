@@ -43,7 +43,7 @@ const UserProfileCard = ({ user }) => {
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-700">
-        <p className="text-sm text-gray-400">Firebase Authenticated User</p>
+        <p className="text-sm text-gray-400">Authenticated User</p>
       </div>
     </motion.div>
   );

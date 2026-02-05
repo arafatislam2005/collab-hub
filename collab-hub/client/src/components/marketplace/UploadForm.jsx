@@ -194,9 +194,8 @@ const UploadForm = ({ onSubmit, loading }) => {
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
-              dragActive ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'
-            }`}
+            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${dragActive ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'
+              }`}
           >
             <FiUpload className="mx-auto mb-2 text-gray-400" size={32} />
             <input

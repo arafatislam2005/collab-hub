@@ -32,14 +32,13 @@ const ProductCard = ({ design, onLike, onAddToCart }) => {
           src={imageUrl}
           alt={design.title}
           onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
         />
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 animate-pulse" />
         )}
-        
+
         {/* Category Badge */}
         <div className="absolute top-2 left-2">
           <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
@@ -118,9 +117,8 @@ const ProductCard = ({ design, onLike, onAddToCart }) => {
           <div className="flex space-x-2">
             <button
               onClick={handleLike}
-              className={`p-2 rounded transition ${
-                isLiked ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white hover:bg-red-600'
-              }`}
+              className={`p-2 rounded transition ${isLiked ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white hover:bg-red-600'
+                }`}
               title="Like this design"
             >
               <FiHeart size={18} fill={isLiked ? 'currentColor' : 'none'} />

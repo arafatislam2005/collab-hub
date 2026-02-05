@@ -23,7 +23,7 @@ const Navbar = ({ user, onLogout, unreadNotifications }) => {
             <Link to="/upload" className="hover:text-blue-400 transition">
               Upload
             </Link>
-            
+
             {user ? (
               <>
                 <div className="relative">
@@ -87,7 +87,7 @@ const Navbar = ({ user, onLogout, unreadNotifications }) => {
                 <Link to="/login" className="block hover:text-blue-400 py-2">
                   Login
                 </Link>
-                <Link to="/register" className="block bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 py-2">
+                <Link to="/register" className="block bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
                   Sign Up
                 </Link>
               </>

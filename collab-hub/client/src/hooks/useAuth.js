@@ -1,65 +1,35 @@
 import { useState, useEffect } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import api from '../api/axios';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
-  const [firebaseUser, setFirebaseUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Listen to auth state changes
+  // Check if user is logged in on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const checkAuth = async () => {
       try {
         setAuthLoading(true);
-        if (firebaseUser) {
-          setFirebaseUser(firebaseUser);
-          // Get user data from Firestore
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (userSnap.exists()) {
-            setUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email,
-              ...userSnap.data(),
-            });
-          } else {
-            // If user doc doesn't exist, create one
-            const userData = {
-              email: firebaseUser.email,
-              name: firebaseUser.displayName || 'User',
-              avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-              createdAt: new Date(),
-            };
-            await setDoc(userRef, userData);
-            setUser({
-              id: firebaseUser.uid,
-              ...userData,
-            });
-          }
-        } else {
-          setFirebaseUser(null);
-          setUser(null);
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Try to get user info from backend
+          const response = await api.get('/users/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(response.data);
         }
       } catch (err) {
-        console.error('Error loading user:', err);
-        setError(err.message);
+        console.error('Auth check error:', err);
+        localStorage.removeItem('token');
+        setUser(null);
       } finally {
         setAuthLoading(false);
       }
-    });
+    };
 
-    return unsubscribe;
+    checkAuth();
   }, []);
 
   const register = async (name, email, password) => {
@@ -67,44 +37,22 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
 
-      // Create user with Firebase Auth
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
-
-      // Update profile with name
-      await updateProfile(firebaseUser, {
-        displayName: name,
-        photoURL: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-      });
-
-      // Create user document in Firestore
-      const userData = {
-        email,
+      const response = await api.post('/auth/register', {
         name,
-        avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-        role: 'user',
-        createdAt: new Date(),
-      };
-
-      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-
-      const token = await firebaseUser.getIdToken();
-      localStorage.setItem('token', token);
-
-      setUser({
-        id: firebaseUser.uid,
-        ...userData,
+        email,
+        password,
       });
+
+      const { token, user: userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
 
       return {
         success: true,
-        user: {
-          id: firebaseUser.uid,
-          email,
-          name,
-        },
+        user: userData,
       };
     } catch (err) {
-      const errorMessage = getFirebaseErrorMessage(err.code);
+      const errorMessage = err.response?.data?.message || 'Registration failed';
       setError(errorMessage);
       throw err;
     } finally {
@@ -117,16 +65,21 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
 
-      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
-      const token = await firebaseUser.getIdToken();
+      const response = await api.post('/auth/login', {
+        email,
+        password,
+      });
+
+      const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
+      setUser(userData);
 
       return {
         success: true,
-        user: firebaseUser,
+        user: userData,
       };
     } catch (err) {
-      const errorMessage = getFirebaseErrorMessage(err.code);
+      const errorMessage = err.response?.data?.message || 'Login failed';
       setError(errorMessage);
       throw err;
     } finally {
@@ -137,10 +90,8 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       setLoading(true);
-      await signOut(auth);
       localStorage.removeItem('token');
       setUser(null);
-      setFirebaseUser(null);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -150,21 +101,17 @@ export const useAuth = () => {
   };
 
   const getMe = async () => {
-    if (!firebaseUser) return null;
-
     try {
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      const userSnap = await getDoc(userRef);
+      const token = localStorage.getItem('token');
+      if (!token) return null;
 
-      if (userSnap.exists()) {
-        const userData = {
-          id: firebaseUser.uid,
-          ...userSnap.data(),
-        };
-        setUser(userData);
-        return userData;
-      }
-      return null;
+      const response = await api.get('/users/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const userData = response.data;
+      setUser(userData);
+      return userData;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -173,7 +120,6 @@ export const useAuth = () => {
 
   return {
     user,
-    firebaseUser,
     loading,
     error,
     authLoading,
@@ -184,18 +130,18 @@ export const useAuth = () => {
   };
 };
 
-// Helper function to convert Firebase error codes to user-friendly messages
-const getFirebaseErrorMessage = (code) => {
+// Helper function to get user-friendly error messages
+const getErrorMessage = (error) => {
   const errorMessages = {
-    'auth/user-not-found': 'User not found. Please check your email or register.',
-    'auth/wrong-password': 'Incorrect password. Please try again.',
-    'auth/email-already-in-use': 'Email is already in use. Please log in or use a different email.',
-    'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
-    'auth/invalid-email': 'Invalid email address.',
-    'auth/user-disabled': 'User account has been disabled.',
-    'auth/too-many-requests': 'Too many login attempts. Please try again later.',
-    'auth/network-request-failed': 'Network error. Please check your internet connection.',
+    'user-not-found': 'User not found. Please check your email or register.',
+    'wrong-password': 'Incorrect password. Please try again.',
+    'email-already-in-use': 'Email is already in use. Please log in or use a different email.',
+    'weak-password': 'Password is too weak. Please use at least 6 characters.',
+    'invalid-email': 'Invalid email address.',
+    'user-disabled': 'User account has been disabled.',
+    'too-many-requests': 'Too many login attempts. Please try again later.',
+    'network-request-failed': 'Network error. Please check your internet connection.',
   };
 
-  return errorMessages[code] || 'Authentication failed. Please try again.';
+  return errorMessages[error] || 'Authentication failed. Please try again.';
 };

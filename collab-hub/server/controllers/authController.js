@@ -102,7 +102,7 @@ export const getMe = async (req, res) => {
     // In demo mode, get user from token
     const userId = req.user?.id;
     const user = demoUsers.get(userId);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

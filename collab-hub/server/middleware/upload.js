@@ -21,7 +21,7 @@ const fileFilter = (req, file, cb) => {
       'model/gltf+json'
     ];
     const ext = path.extname(file.originalname).toLowerCase();
-    
+
     if (['.stl', '.obj', '.gltf', '.glb'].includes(ext) || allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {

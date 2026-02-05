@@ -8,7 +8,7 @@ export const handleConnection = (io, socket) => {
   socket.on('join-room', (userId) => {
     onlineUsers.set(userId, socket.id);
     socket.join(`user-${userId}`);
-    
+
     // Broadcast user online status
     io.emit('user-online', {
       userId,

@@ -17,8 +17,8 @@ export const getAllDesigns = async (req, res) => {
     if (priceMax) filtered = filtered.filter(d => d.price <= parseFloat(priceMax));
     if (search) {
       const term = search.toLowerCase();
-      filtered = filtered.filter(d => 
-        d.title.toLowerCase().includes(term) || 
+      filtered = filtered.filter(d =>
+        d.title.toLowerCase().includes(term) ||
         d.description.toLowerCase().includes(term)
       );
     }
@@ -158,7 +158,7 @@ export const likeDesign = async (req, res) => {
     }
 
     if (!design.likedBy) design.likedBy = [];
-    
+
     const userId = req.user?.id || 'anonymous';
     const alreadyLiked = design.likedBy.includes(userId);
 

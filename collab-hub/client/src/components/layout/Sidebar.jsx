@@ -39,8 +39,8 @@ const Sidebar = ({ filters, onFilterChange }) => {
             <label key={cat} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.category === cat}
-                onChange={(e) => onFilterChange('category', e.target.checked ? cat : '')}
+                checked={Array.isArray(filters.category) ? filters.category.includes(cat) : false}
+                onChange={() => onFilterChange('category', cat)}
                 className="mr-2"
               />
               <span className="text-sm">{cat}</span>
@@ -57,8 +57,8 @@ const Sidebar = ({ filters, onFilterChange }) => {
             <label key={mat} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.material === mat}
-                onChange={(e) => onFilterChange('material', e.target.checked ? mat : '')}
+                checked={Array.isArray(filters.material) ? filters.material.includes(mat) : false}
+                onChange={() => onFilterChange('material', mat)}
                 className="mr-2"
               />
               <span className="text-sm">{mat}</span>
