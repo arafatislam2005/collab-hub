@@ -1,65 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-// FIX: Added /config/ to the path
+import { signInWithEmailAndPassword, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [localError, setLocalError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setLocalError(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      navigate('/');
-    } catch (error) {
-      setLocalError("Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-      navigate('/');
-    } catch (error) {
-      setLocalError("Google sign-in failed.");
-    } finally {
-      setLoading(false);
+  const handleAuthAction = async (e) => {
+    if (user) {
+      await signOut(auth);
+    } else {
+      e.preventDefault();
+      setLoading(true);
+      try {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        navigate('/');
+      } catch (error) {
+        setLocalError("Invalid credentials");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center p-4">
-      <motion.form onSubmit={handleSubmit} className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full border border-gray-700">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">Login</h2>
-        {localError && <div className="bg-red-600 text-white p-3 rounded mb-4">{localError}</div>}
-        <div className="space-y-4">
-          <input type="email" name="email" placeholder="Email" onChange={handleChange} className="w-full p-3 bg-gray-700 text-white rounded" />
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} className="w-full p-3 bg-gray-700 text-white rounded" />
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 py-3 rounded font-bold text-white">Sign In</button>
-          <button type="button" onClick={handleGoogleSignIn} className="w-full bg-white text-black py-3 rounded font-bold flex items-center justify-center gap-2">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="G" /> Google
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <motion.div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full border border-gray-700 text-center">
+        <h2 className="text-3xl font-bold text-white mb-6">
+          {user ? "Session Active" : "Login"}
+        </h2>
 
-
-      </motion.form>
+        {user ? (
+          <>
+            <p className="text-gray-400 mb-6">You are currently logged in as {user.email}</p>
+            <button onClick={handleAuthAction} className="w-full bg-red-600 py-3 rounded-lg font-bold text-white">
+              Logout
+            </button>
+          </>
+        ) : (
+          <form onSubmit={handleAuthAction} className="space-y-4">
+            {localError && <div className="bg-red-600 text-white p-2 rounded">{localError}</div>}
+            <input type="email" placeholder="Email" className="w-full p-3 bg-gray-700 text-white rounded" onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+            <input type="password" placeholder="Password" className="w-full p-3 bg-gray-700 text-white rounded" onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 py-3 rounded font-bold text-white">
+              {loading ? "Signing In..." : "Sign In"}
+            </button>
+            <p className="text-gray-400">New? <Link to="/register" className="text-blue-400">Register</Link></p>
+          </form>
+        )}
+      </motion.div>
     </div>
   );
 };
